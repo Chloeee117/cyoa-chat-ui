@@ -4,15 +4,15 @@ import ChatMessage from './ChatMessage';
 
 interface ChatContainerProps {
   messages: ChatMessageType[];
-  onChoiceSelect: (text: string) => void;
-  selectedChoiceMessageId: string | null;
-  onDirectInput: () => void;
+  onChoiceSelect: (messageId: string, choiceIndex: number) => void;
+  disabledChoiceIds: string[];
+  onDirectInput: (messageId: string) => void;
 }
 
 export default function ChatContainer({
   messages,
   onChoiceSelect,
-  selectedChoiceMessageId,
+  disabledChoiceIds,
   onDirectInput,
 }: ChatContainerProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -28,7 +28,7 @@ export default function ChatContainer({
           key={msg.id}
           message={msg}
           onChoiceSelect={onChoiceSelect}
-          choicesDisabled={selectedChoiceMessageId !== null}
+          choicesDisabled={disabledChoiceIds.includes(msg.id)}
           onDirectInput={onDirectInput}
         />
       ))}

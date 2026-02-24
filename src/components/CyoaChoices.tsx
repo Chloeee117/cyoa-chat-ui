@@ -3,7 +3,7 @@ import { renderStyledText } from '../utils/renderStyledText';
 
 interface CyoaChoicesProps {
   choices: CyoaChoice[];
-  onSelect?: (text: string) => void;
+  onSelect?: (choiceIndex: number) => void;
   onDirectInput?: () => void;
 }
 
@@ -17,7 +17,7 @@ export default function CyoaChoices({
       {choices.map((choice) => (
         <button
           key={choice.index}
-          onClick={() => onSelect?.(choice.text)}
+          onClick={() => onSelect?.(choice.index)}
           className="w-full text-left text-[13px] leading-[1.6]
             px-3 py-2 rounded-xl break-words
             border transition-all duration-300
