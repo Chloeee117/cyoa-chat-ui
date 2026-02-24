@@ -7,14 +7,16 @@ import ChatInput from './components/ChatInput';
 
 function App() {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [selectedChoiceMessageId, setSelectedChoiceMessageId] = useState<string | null>(null);
+  const [disabledChoiceIds, setDisabledChoiceIds] = useState<string[]>([]);
   const [showInput, setShowInput] = useState(false);
+  const [activeInputMessageId, setActiveInputMessageId] = useState<
+    string | null
+  >(null);
 
   const handleChoiceSelect = useCallback(
-    (text: string) => {
-      if (selectedChoiceMessageId) return; // 이미 선택됨
+    (messageId: string, text: string) => {
+      if (disabledChoiceIds.includes(messageId)) return;
 
-      // 1. 선택된 텍스트를 유저 메시지로 추가
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
         role: 'user',
@@ -22,36 +24,49 @@ function App() {
       };
 
       setMessages((prev) => [...prev, userMessage]);
-      setSelectedChoiceMessageId('selected');
+      setDisabledChoiceIds((prev) => [...prev, messageId]);
       setShowInput(false);
+      setActiveInputMessageId(null);
 
-      // 2. 잠시 후 AI 후속 응답 추가
       setTimeout(() => {
-        setMessages((prev) => [...prev, followUpMessage]);
+        setMessages((prev) => [
+          ...prev,
+          { ...followUpMessage, id: `ai-${Date.now()}` },
+        ]);
       }, 1200);
     },
-    [selectedChoiceMessageId],
+    [disabledChoiceIds],
   );
 
-  const handleDirectInput = useCallback(() => {
+  const handleDirectInput = useCallback((messageId: string) => {
     setShowInput(true);
+    setActiveInputMessageId(messageId);
   }, []);
 
-  const handleSend = useCallback((text: string) => {
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: text,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setShowInput(false);
-    setSelectedChoiceMessageId('selected');
+  const handleSend = useCallback(
+    (text: string) => {
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: text,
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setShowInput(false);
 
-    // 직접 입력도 선택지와 동일하게 후속 AI 응답 트리거
-    setTimeout(() => {
-      setMessages((prev) => [...prev, followUpMessage]);
-    }, 1200);
-  }, []);
+      if (activeInputMessageId) {
+        setDisabledChoiceIds((prev) => [...prev, activeInputMessageId]);
+        setActiveInputMessageId(null);
+      }
+
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { ...followUpMessage, id: `ai-${Date.now()}` },
+        ]);
+      }, 1200);
+    },
+    [activeInputMessageId],
+  );
 
   return (
     <div className="flex flex-col h-full max-w-md mx-auto bg-bg-primary">
@@ -59,7 +74,7 @@ function App() {
       <ChatContainer
         messages={messages}
         onChoiceSelect={handleChoiceSelect}
-        selectedChoiceMessageId={selectedChoiceMessageId}
+        disabledChoiceIds={disabledChoiceIds}
         onDirectInput={handleDirectInput}
       />
       {showInput && <ChatInput onSend={handleSend} />}

@@ -6,9 +6,9 @@ import { CHARACTER_NAME, USER_NAME } from '../data/sampleChat';
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  onChoiceSelect?: (text: string) => void;
+  onChoiceSelect?: (messageId: string, text: string) => void;
   choicesDisabled?: boolean;
-  onDirectInput?: () => void;
+  onDirectInput?: (messageId: string) => void;
 }
 
 export default function ChatMessage({
@@ -73,8 +73,8 @@ export default function ChatMessage({
       {hasChoices && !choicesDisabled && (
         <CyoaChoices
           choices={parsed.choices}
-          onSelect={onChoiceSelect}
-          onDirectInput={onDirectInput}
+          onSelect={(text) => onChoiceSelect?.(message.id, text)}
+          onDirectInput={() => onDirectInput?.(message.id)}
         />
       )}
     </div>
