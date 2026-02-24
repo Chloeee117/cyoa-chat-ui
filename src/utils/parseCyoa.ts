@@ -1,35 +1,29 @@
 import type { CyoaChoice, ParsedMessage } from '../types/chat';
 
 /**
- * <cyoa> 태그와 <scene> 태그를 파싱하여 본문, 장면 내레이션, 선택지를 분리한다.
+ * <cyoa> 태그를 파싱하여 본문과 선택지를 분리한다.
  */
 export function parseCyoaContent(content: string): ParsedMessage {
   const cyoaRegex = /<cyoa>\s*([\s\S]*?)\s*<\/cyoa>/;
-  const sceneRegex = /<scene>\s*([\s\S]*?)\s*<\/scene>/;
+  const match = content.match(cyoaRegex);
 
-  const cyoaMatch = content.match(cyoaRegex);
-  const sceneMatch = content.match(sceneRegex);
-
-  // 장면 내레이션 추출
-  const sceneText = sceneMatch ? sceneMatch[1].trim() : '';
-
-  // 본문에서 <cyoa>, <scene> 블록 제거
-  let bodyText = content;
-  if (cyoaMatch) bodyText = bodyText.replace(cyoaRegex, '');
-  if (sceneMatch) bodyText = bodyText.replace(sceneRegex, '');
-  bodyText = bodyText.trim();
-
-  if (!cyoaMatch) {
-    return { bodyText, sceneText, choices: [] };
+  if (!match) {
+    return {
+      bodyText: content.trim(),
+      choices: [],
+    };
   }
 
+  // 본문에서 <cyoa> 블록 제거
+  const bodyText = content.replace(cyoaRegex, '').trim();
+
   // 선택지 파싱
-  const choicesRaw = cyoaMatch[1].trim();
+  const choicesRaw = match[1].trim();
   const lines = choicesRaw.split('\n').filter((line) => line.trim());
 
   const choices: CyoaChoice[] = lines
     .map((line, idx) => {
-      // "1. 텍스트" 형식에서 번호 제거
+      // "1. - 텍스트" 또는 "1. 텍스트" 형식
       const lineMatch = line.trim().match(/^\d+\.\s*-?\s*(.+)$/);
       if (lineMatch) {
         return {
@@ -51,7 +45,6 @@ export function parseCyoaContent(content: string): ParsedMessage {
 
   return {
     bodyText,
-    sceneText,
     choices,
   };
 }
